@@ -5,13 +5,15 @@
 
 package com.wangyin.parameter;
 
+import hudson.EnvVars;
+import hudson.model.Run;
 import hudson.model.StringParameterValue;
-
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
 * @author wy-scm <wy-scm@jd.com>
 */
+@SuppressWarnings("unused")
 public class WHideParameterValue extends StringParameterValue {
 	
 	private static final long serialVersionUID = 6926027508686211675L;
@@ -28,5 +30,11 @@ public class WHideParameterValue extends StringParameterValue {
     @Override
     public String toString() {
         return "(HiddenParameterValue) " + getName() + "='" + value + "'";
+    }
+
+    @Override
+    public void buildEnvironment(Run<?,?> build, EnvVars env) {
+	    if(value == null) return;
+	    super.buildEnvironment(build, env);
     }
 }

@@ -3,21 +3,27 @@
  */
 package com.wangyin.parameter;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
-import hudson.model.ParameterDefinition;
-import hudson.model.ParameterValue;
+import hudson.Util;
+import hudson.model.*;
 import net.sf.json.JSONObject;
+import org.jenkinsci.Symbol;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.DoNotUse;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.StaplerRequest;
 
 /**
  * @author wy-scm <wy-scm@jd.com>
  * 
  */
-public class WHideParameterDefinition extends ParameterDefinition {
+@SuppressWarnings("unused")
+public class WHideParameterDefinition extends SimpleParameterDefinition {
 
 	private static final long serialVersionUID = 8296806777255584941L;
-	private String defaultValue;
+	private String defaultValue = "";
 
 	public String getDefaultValue() {
 		return defaultValue;
@@ -26,52 +32,46 @@ public class WHideParameterDefinition extends ParameterDefinition {
 	public void setDefaultValue(String defaultValue) {
 		this.defaultValue = defaultValue;
 	}
- 
-    @DataBoundConstructor
+
+	@DataBoundConstructor
 	public WHideParameterDefinition(String name,String defaultValue, String description) {
 		super(name, description);
 		this.defaultValue = defaultValue;
 	}
- 
+
     @Extension
+    @Symbol({"hidden", "hiddenParam"})
 	public static class DescriptorImpl extends ParameterDescriptor {
         @Override
+        @NonNull
         public String getDisplayName() {
             return "Hidden Parameter";
         }
     }
 
-    @Override
+	@Override
 	public WHideParameterValue getDefaultParameterValue() {
-    	WHideParameterValue v = new WHideParameterValue(getName(),defaultValue, getDescription());
-		return v;
+		return new WHideParameterValue(getName(), defaultValue, getDescription());
 	}
 
-
-
-	public ParameterValue createValue(StaplerRequest req) {
-        String[] value = req.getParameterValues(getName());
-        if (value == null) {
-            return getDefaultParameterValue();
-        } else if (value.length != 1) {
-            throw new IllegalArgumentException("Illegal number of parameter values for " + getName() + ": " + value.length);
-        } else {
-            return new WHideParameterValue(getName(), value[0], getDescription());
-        } 
-	}
-
-
+	@Override
 	public ParameterValue createValue(StaplerRequest req, JSONObject jo) {
 		WHideParameterValue value = req.bindJSON(WHideParameterValue.class, jo);
         value.setDescription(getDescription());
 		return value;
 	}
 
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) { 
-
+	public ParameterValue createValue(String str) {
+		return new WHideParameterValue(getName(), str, getDescription());
 	}
 
+    @Override
+    public ParameterDefinition copyWithDefaultValue(ParameterValue defaultValue) {
+        if (defaultValue instanceof StringParameterValue) {
+            StringParameterValue value = (StringParameterValue) defaultValue;
+            return new WHideParameterDefinition(getName(), value.getValue(), getDescription());
+        } else {
+            return this;
+        }
+    }
 }
